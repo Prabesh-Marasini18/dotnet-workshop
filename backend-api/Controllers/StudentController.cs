@@ -10,10 +10,10 @@ namespace WeatherAPI.Controllers
         
         private static List<Student> students = new List<Student>
         {
-            new Student { Id = "NP01MS7A240036", Name = "Raj Sharma", Age = 20, Course = "Computer Science" },
-            new Student { Id = "NP01MS7A240037", Name = "Priya Paudel", Age = 21, Course = "Information Technology" },
-            new Student { Id = "NP01MS7A240038", Name = "Roshan Thapa", Age = 19, Course = "Software Engineering" },
-            new Student { Id = "NP01MS7A240039", Name = "Anita Rai", Age = 22, Course = "Data Science" }
+            new Student { Id = "1", Name = "Raj Sharma", Age = 20, Course = "Computer Science" },
+            new Student { Id = "2", Name = "Priya Paudel", Age = 21, Course = "Information Technology" },
+            new Student { Id = "3", Name = "Roshan Thapa", Age = 19, Course = "Software Engineering" },
+            new Student { Id = "4", Name = "Anita Rai", Age = 22, Course = "Data Science" }
         };
 
     
@@ -47,7 +47,6 @@ namespace WeatherAPI.Controllers
         [HttpPost("add")]
         public ActionResult<Student> AddStudent([FromBody] Student student)
         {
-            // Validation
             if (student == null)
             {
                 return BadRequest(new { message = "Student object cannot be null" });
@@ -73,7 +72,6 @@ namespace WeatherAPI.Controllers
                 return BadRequest(new { message = "Student Course is required" });
             }
 
-            // Check if student with same ID already exists
             if (students.Any(s => s.Id == student.Id))
             {
                 return BadRequest(new { message = $"Student with ID {student.Id} already exists" });
@@ -86,11 +84,10 @@ namespace WeatherAPI.Controllers
 
 
 
-     
+    
         [HttpPut("update")]
         public ActionResult<Student> UpdateStudent([FromBody] Student student)
         {
-            // Validation
             if (student == null)
             {
                 return BadRequest(new { message = "Student object cannot be null" });
@@ -116,7 +113,6 @@ namespace WeatherAPI.Controllers
                 return BadRequest(new { message = "Student Course is required" });
             }
 
-            // Find the student
             var existingStudent = students.FirstOrDefault(s => s.Id == student.Id);
             
             if (existingStudent == null)
@@ -124,7 +120,6 @@ namespace WeatherAPI.Controllers
                 return NotFound(new { message = $"Student with ID {student.Id} not found" });
             }
 
-            // Update the student
             existingStudent.Name = student.Name;
             existingStudent.Age = student.Age;
             existingStudent.Course = student.Course;
@@ -136,13 +131,11 @@ namespace WeatherAPI.Controllers
         [HttpDelete("delete/{id}")]
         public ActionResult DeleteStudent(string id)
         {
-            // Validation
             if (string.IsNullOrWhiteSpace(id))
             {
                 return BadRequest(new { message = "Student ID is required" });
             }
 
-            // Find the student
             var student = students.FirstOrDefault(s => s.Id == id);
             
             if (student == null)
@@ -150,7 +143,6 @@ namespace WeatherAPI.Controllers
                 return NotFound(new { message = $"Student with ID {id} not found" });
             }
 
-            // Delete the student
             students.Remove(student);
             return Ok(new { message = $"Student with ID {id} deleted successfully" });
         }
