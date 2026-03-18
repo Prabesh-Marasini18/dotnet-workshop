@@ -34,7 +34,8 @@ public class HomeController : ControllerBase
         return Ok(new
         {
             Name = myInfo["Name"],
-            Age = int.TryParse(myInfo["Age"], out var age) ? age : 0,
+            Age = myInfo["Age"],
+            // Age = int.TryParse(myInfo["Age"], out var age) ? age : 0,
             Address = myInfo["Address"]
         });
     }
