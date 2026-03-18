@@ -11,6 +11,10 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddOpenApi();
 builder.Services.Configure<OpenApiOptions>(
     builder.Configuration.GetSection(OpenApiOptions.SectionName));
+
+builder.Services.Configure<MyInfoOptions>(
+    builder.Configuration.GetSection(MyInfoOptions.SectionName));
+    
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<GetNetworkService>();
 builder.Services.AddCors(options =>

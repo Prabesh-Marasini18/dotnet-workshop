@@ -52,7 +52,7 @@ public class ProductController : ControllerBase
             }
 
         }
-        HttpContext.Response.Headers.Add("X-Response-Time", DateTime.UtcNow.ToString("o"));
+        HttpContext.Response.Headers["X-Response-Time"] = DateTime.UtcNow.ToString("o");
         Console.WriteLine("================");
         foreach (var header in HttpContext.Response.Headers)
         {
