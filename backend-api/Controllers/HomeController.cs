@@ -35,7 +35,6 @@ public class HomeController : ControllerBase
         {
             Name = myInfo["Name"],
             Age = myInfo["Age"],
-            // Age = int.TryParse(myInfo["Age"], out var age) ? age : 0,
             Address = myInfo["Address"]
         });
     }
