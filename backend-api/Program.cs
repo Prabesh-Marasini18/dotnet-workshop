@@ -1,4 +1,3 @@
-using ProductAPI;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,10 +11,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddOpenApi();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-builder.Services.Configure<OpenApiOptions>(
-    builder.Configuration.GetSection(OpenApiOptions.SectionName));
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<GetNetworkService>();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAllOrigins",
@@ -26,6 +22,12 @@ builder.Services.AddCors(options =>
                   .AllowAnyHeader();
         });
 });
+
+
+builder.Services.Configure<ExternalServicesOptions>(builder.Configuration.GetSection("ExternalServices"));
+
+
+
 var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
@@ -41,6 +43,7 @@ using (var scope = app.Services.CreateScope())
         Console.WriteLine(" Database connection failed!");
     }
 }
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

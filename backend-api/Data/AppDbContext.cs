@@ -1,9 +1,13 @@
 using Microsoft.EntityFrameworkCore;
-
-namespace ProductAPI;
+using ProductAPI;
 
 public class AppDbContext : DbContext
 {
+    //Add constructor to accept DbContextOptions 
+    //This allows configuration to be passed in from Program.cs when registering the DbContext 
+    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+    {
+    }
 
     public DbSet<Category> Categories { get; set; }
     public DbSet<Supplier> Suppliers { get; set; }
@@ -12,8 +16,6 @@ public class AppDbContext : DbContext
     public DbSet<Order> Orders { get; set; }
     public DbSet<OrderItem> OrderItems { get; set; }
 
-    public AppDbContext(DbContextOptions<AppDbContext> options)
-        : base(options) { }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
