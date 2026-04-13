@@ -76,9 +76,9 @@ public class OrderItemsController : ControllerBase
             .Select(oi => new OrderItemDetailDto
             {
                 OrderId = oi.OrderId,
-                OrderDate = oi.Order.OrderDate,
+                OrderDate = oi.Order!.OrderDate,
                 ProductId = oi.ProductId,
-                ProductName = oi.Product.Name,
+                ProductName = oi.Product!.Name,
                 Quantity = oi.Quantity,
                 UnitPrice = oi.UnitPrice
             })
@@ -97,13 +97,13 @@ public class OrderItemsController : ControllerBase
         var end = start.AddDays(1);
 
         var data = await _context.OrderItems
-            .Where(oi => oi.Order.OrderDate >= start && oi.Order.OrderDate < end)
+            .Where(oi => oi.Order!.OrderDate >= start && oi.Order!.OrderDate < end)
             .Select(oi => new OrderItemDetailDto
             {
                 OrderId = oi.OrderId,
-                OrderDate = oi.Order.OrderDate,
+                OrderDate = oi.Order!.OrderDate,
                 ProductId = oi.ProductId,
-                ProductName = oi.Product.Name,
+                ProductName = oi.Product!.Name,
                 Quantity = oi.Quantity,
                 UnitPrice = oi.UnitPrice
             })

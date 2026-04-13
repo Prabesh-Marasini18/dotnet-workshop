@@ -7,7 +7,7 @@ public class AppDbContext : IdentityDbContext<IdentityUser>
 {
     //Add constructor to accept DbContextOptions 
     //This allows configuration to be passed in from Program.cs when registering the DbContext 
-    public AppDbContext(DbContextOptions<AppDbContext> options)
+    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
         
     }
@@ -30,6 +30,7 @@ public class AppDbContext : IdentityDbContext<IdentityUser>
             new IdentityRole {Id = "3", Name = "Vendor", NormalizedName = "VENDOR" }
 
         );
+        
         // Composite Key: OrderItem
         modelBuilder.Entity<OrderItem>()
             .HasKey(oi => new { oi.OrderId, oi.ProductId });
