@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,10 +19,14 @@ builder.Services.AddCors(options =>
         policy =>
         {
             policy.AllowAnyOrigin() // Use AllowAnyOrigin() with caution
-                  .AllowAnyMethod()
-                  .AllowAnyHeader();
+                .AllowAnyMethod()
+                .AllowAnyHeader();
         });
 });
+
+builder.Services.AddIdentity<IdentityUser, IdentityRole>()
+    .AddEntityFrameworkStores<AppDbContext>()
+    .AddDefaultTokenProviders();
 
 
 builder.Services.Configure<ExternalServicesOptions>(builder.Configuration.GetSection("ExternalServices"));
