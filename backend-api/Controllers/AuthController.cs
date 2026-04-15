@@ -80,4 +80,24 @@ public class AuthController : ControllerBase
         if (result.Succeeded) return Ok("Login successful.");
         return Unauthorized("Invalid login attempt.");
     }
+
+    //logout
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout()
+    {
+        await _signInManager.SignOutAsync();
+        return Ok("Logged out successfully.");
+    }
+
+    //change password
+    [HttpPost("change-password")]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto model)
+    {
+        var user = await _userManager.FindByEmailAsync(model.Email);
+        if (user == null) return NotFound("User not found.");
+
+        var result = await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
+        if (result.Succeeded) return Ok("Password changed successfully.");
+        return BadRequest(result.Errors);
+    }   
 }
