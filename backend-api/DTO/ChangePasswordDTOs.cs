@@ -1,4 +1,4 @@
-// change password DTO
+
 using System.ComponentModel.DataAnnotations;
 namespace WeatherAPI.DTOs;
 

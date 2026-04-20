@@ -1,4 +1,4 @@
-//logout
+
 using System.ComponentModel.DataAnnotations;
 namespace WeatherAPI.DTOs;
 
