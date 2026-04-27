@@ -68,3 +68,12 @@ public class BulkPriceUpdateDto
     public int ProductId { get; set; }
     public decimal NewPrice { get; set; }
 }
+
+public class ProductFilterDto
+{
+    public string? Name { get; set; }
+    public string? SKU { get; set; }
+    public decimal? MinPrice { get; set; }
+    public decimal? MaxPrice { get; set; }
+    public int? CategoryId { get; set; }
+}

@@ -1,47 +1,96 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using WeatherAPI.DTOs;
 
 [ApiController]
 [Route("api/[controller]")]
 public class ProductsController : ControllerBase
 {
+    private readonly IMemoryCache _cache;
     private readonly AppDbContext _context;
-    public ProductsController(AppDbContext context) => _context = context;
+
+    private const string PRODUCTS_ALL_KEY = "products_all";
+
+    public ProductsController(AppDbContext context, IMemoryCache cache)
+    {
+        _context = context;
+        _cache = cache;
+    }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll([FromQuery] ProductFilterDto filter)
     {
-        var products = await _context.Products
-            .Select(p => new ProductDto
-            {
-                Id = p.Id,
-                Name = p.Name,
-                SKU = p.SKU,
-                Price = p.Price,
-                StockQty = p.Stock,
-                CategoryId = p.CategoryId,
-                SupplierId = p.SupplierId
-            })
-            .ToListAsync();
-        return Ok(products);
+        var query = _context.Products.AsQueryable();
+
+        if (!string.IsNullOrEmpty(filter.Name))
+            query = query.Where(p => p.Name.ToLower()
+                         .Contains(filter.Name.ToLower()));
+
+        if (!string.IsNullOrEmpty(filter.SKU))
+            query = query.Where(p => p.SKU.ToLower() == filter.SKU.ToLower());
+
+        if (filter.MinPrice.HasValue)
+            query = query.Where(p => p.Price >= filter.MinPrice.Value);
+
+        if (filter.MaxPrice.HasValue)
+            query = query.Where(p => p.Price <= filter.MaxPrice.Value);
+
+        if (filter.CategoryId.HasValue)
+            query = query.Where(p => p.CategoryId == filter.CategoryId.Value);
+
+        bool hasFilter =
+            filter.Name != null || filter.SKU != null ||
+            filter.MinPrice != null || filter.MaxPrice != null ||
+            filter.CategoryId != null;
+
+        if (!hasFilter &&
+            _cache.TryGetValue(PRODUCTS_ALL_KEY, out List<Product>? cachedProducts))
+        {
+            return Ok(cachedProducts);
+        }
+
+        var results = await query.ToListAsync();
+
+        if (!hasFilter)
+        {
+            var options = new MemoryCacheEntryOptions()
+                .SetAbsoluteExpiration(TimeSpan.FromMinutes(5))
+                .SetSlidingExpiration(TimeSpan.FromMinutes(2));
+
+            _cache.Set(PRODUCTS_ALL_KEY, results, options);
+        }
+
+        return Ok(results);
     }
 
     [HttpGet("{id:int}")]
     public async Task<IActionResult> GetById(int id)
     {
+        string cacheKey = $"product_{id}";
+
+        if (_cache.TryGetValue(cacheKey, out ProductDto? cachedProduct))
+        {
+            return Ok(cachedProduct);
+        }
+
         var product = await _context.Products.FindAsync(id);
         if (product == null) return NotFound();
-        return Ok(new ProductDto
+
+        var result = new ProductDto
         {
             Id = product.Id,
             Name = product.Name,
             SKU = product.SKU,
             Price = product.Price,
-            StockQty = product.Stock,
+            StockQty = product.StockQty,
             CategoryId = product.CategoryId,
             SupplierId = product.SupplierId
-        });
+        };
+
+        _cache.Set(cacheKey, result, TimeSpan.FromMinutes(5));
+
+        return Ok(result);
     }
 
     [HttpGet("{id:int}/supplier")]
@@ -70,19 +119,22 @@ public class ProductsController : ControllerBase
             Name = dto.Name,
             SKU = dto.SKU,
             Price = dto.Price,
-            Stock = dto.StockQty,
+            StockQty = dto.StockQty,
             CategoryId = dto.CategoryId,
             SupplierId = dto.SupplierId
         };
         _context.Products.Add(product);
         await _context.SaveChangesAsync();
+
+        _cache.Remove(PRODUCTS_ALL_KEY);
+
         return CreatedAtAction(nameof(GetById), new { id = product.Id }, new ProductDto
         {
             Id = product.Id,
             Name = product.Name,
             SKU = product.SKU,
             Price = product.Price,
-            StockQty = product.Stock,
+            StockQty = product.StockQty,
             CategoryId = product.CategoryId,
             SupplierId = product.SupplierId
         });
@@ -97,11 +149,15 @@ public class ProductsController : ControllerBase
         product.Name = dto.Name;
         product.SKU = dto.SKU;
         product.Price = dto.Price;
-        product.Stock = dto.StockQty;
+        product.StockQty = dto.StockQty;
         product.CategoryId = dto.CategoryId;
         product.SupplierId = dto.SupplierId;
 
         await _context.SaveChangesAsync();
+
+        _cache.Remove(PRODUCTS_ALL_KEY);
+        _cache.Remove($"product_{id}");
+
         return NoContent();
     }
 
@@ -113,6 +169,10 @@ public class ProductsController : ControllerBase
 
         _context.Products.Remove(product);
         await _context.SaveChangesAsync();
+
+        _cache.Remove(PRODUCTS_ALL_KEY);
+        _cache.Remove($"product_{id}");
+
         return NoContent();
     }
 
@@ -124,12 +184,15 @@ public class ProductsController : ControllerBase
             Name = dto.Name,
             SKU = dto.SKU,
             Price = dto.Price,
-            Stock = dto.StockQty,
+            StockQty = dto.StockQty,
             CategoryId = dto.CategoryId,
             SupplierId = dto.SupplierId
         }).ToList();
         await _context.Products.AddRangeAsync(products);
         await _context.SaveChangesAsync();
+
+        _cache.Remove(PRODUCTS_ALL_KEY);
+
         return Ok(new { inserted = products.Count });
     }
 
@@ -143,7 +206,7 @@ public class ProductsController : ControllerBase
                 p.Name,
                 p.SKU,
                 p.Price,
-                StockQty = p.Stock,
+                StockQty = p.StockQty,
                 Category = new CategoryDto { Id = p.Category.Id, Name = p.Category.Name },
                 Supplier = new SupplierDto { Id = p.Supplier.Id, Name = p.Supplier.Name, Email = p.Supplier.Email, Phone = p.Supplier.Phone }
             })
@@ -166,7 +229,7 @@ public class ProductsController : ControllerBase
                 Name = p.Name,
                 SKU = p.SKU,
                 Price = p.Price,
-                StockQty = p.Stock,
+                StockQty = p.StockQty,
                 CategoryId = p.CategoryId,
                 SupplierId = p.SupplierId
             })
@@ -187,6 +250,9 @@ public class ProductsController : ControllerBase
         }
 
         await _context.SaveChangesAsync();
+
+        _cache.Remove(PRODUCTS_ALL_KEY);
+
         return Ok(new { updated = products.Count });
     }
 }
