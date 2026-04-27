@@ -8,3 +8,5 @@ public class Category
     // One Category has many Products (1-to-M)
     public ICollection<Product> Products { get; set; } = new List<Product>();
 }
+
+//kaussss
